@@ -1,0 +1,432 @@
+<title>Kitchen Gear Compare</title>
+
+<style>
+  /* ---------------------------------------------------------------
+     Apple.com-style treatment: fixed system-font stack (renders as
+     real San Francisco on Apple devices, the same trick apple.com
+     itself uses), alternating full-bleed black / white / #F5F5F7
+     sections, hairline dividers instead of cards, pill buttons,
+     and a spec-style compare table. Deliberately single-theme —
+     apple.com does not respond to OS dark mode either — so every
+     color is painted explicitly rather than toggled.
+  ----------------------------------------------------------------*/
+  :root{
+    --white:      #FFFFFF;
+    --alt:        #F5F5F7;
+    --black:      #000000;
+    --ink:        #1D1D1F;
+    --ink-soft:   #6E6E73;
+    --ink-faint:  #86868B;
+    --on-dark:    #F5F5F7;
+    --on-dark-soft:#A1A1A6;
+    --accent:     #0071E3;
+    --accent-press:#0058B0;
+    --divider:    #D2D2D7;
+    --divider-dark:#424245;
+    --danger:     #FF3B30;
+  }
+
+  *{ box-sizing:border-box; -webkit-font-smoothing:antialiased; }
+  html{ scroll-behavior:smooth; }
+  body{
+    margin:0;
+    background:var(--white);
+    color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Helvetica Neue",Helvetica,Arial,sans-serif;
+    font-size:17px;
+    line-height:1.47;
+    letter-spacing:-0.011em;
+  }
+  h1,h2,h3{ margin:0; font-weight:600; letter-spacing:-0.021em; text-wrap:balance; }
+  p{ margin:0; }
+  a{ color:inherit; text-decoration:none; }
+  .num{ font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace; font-variant-numeric:tabular-nums; }
+  .wrap{ max-width:64rem; margin:0 auto; padding:0 1.5rem; }
+
+  /* ---------------- reveal-on-scroll ---------------- */
+  .reveal{ opacity:0; transform:translateY(16px); transition:opacity .7s ease, transform .7s ease; }
+  .reveal.in{ opacity:1; transform:translateY(0); }
+  @media (prefers-reduced-motion: reduce){
+    .reveal{ opacity:1; transform:none; transition:none; }
+    html{ scroll-behavior:auto; }
+  }
+
+  /* ---------------- promo strip + nav ---------------- */
+  .promo{
+    background:var(--alt); color:var(--ink-soft);
+    text-align:center; font-size:.75rem; padding:.5rem 1rem;
+  }
+  .promo b{ color:var(--ink); font-weight:600; }
+  .nav{
+    position:sticky; top:0; z-index:20;
+    background:rgba(0,0,0,.8); backdrop-filter:saturate(180%) blur(20px);
+    -webkit-backdrop-filter:saturate(180%) blur(20px);
+  }
+  .nav .wrap{
+    display:flex; align-items:center; justify-content:space-between;
+    height:2.75rem; font-size:.8125rem; color:var(--on-dark-soft);
+  }
+  .nav .brand{ color:var(--white); font-weight:600; display:flex; align-items:center; gap:.4rem; }
+  .nav ul{ list-style:none; display:flex; gap:1.6rem; margin:0; padding:0; }
+  .nav li:hover{ color:var(--white); }
+
+  /* ---------------- hero (black) ---------------- */
+  .hero{
+    background:var(--black); color:var(--white);
+    text-align:center; padding:5.5rem 1.5rem 4.5rem;
+  }
+  .hero .eyebrow{ font-size:1.0625rem; font-weight:600; color:var(--on-dark-soft); margin-bottom:.4rem; }
+  .hero h1{ font-size:clamp(2.5rem,6vw,4.5rem); }
+  .hero .sub{
+    margin:1rem auto 0; max-width:34rem; font-size:1.25rem; color:var(--on-dark-soft);
+  }
+  .cta-row{ display:flex; gap:1.6rem; justify-content:center; align-items:center; margin-top:1.9rem; }
+  .pill{
+    display:inline-block; background:var(--accent); color:var(--white);
+    font-size:.95rem; padding:.68rem 1.35rem; border-radius:980px;
+    transition:background .15s ease;
+  }
+  .pill:hover{ background:var(--accent-press); }
+  .pill.ghost{
+    background:transparent; color:var(--white); border:1px solid rgba(255,255,255,.55);
+  }
+  .pill.ghost:hover{ border-color:#fff; }
+  .link-more{ color:var(--accent); font-size:1rem; }
+  .link-more:hover{ text-decoration:underline; }
+  .link-more::after{ content:" \203A"; }
+
+  /* ---------------- section scaffolding ---------------- */
+  section{ padding:4.5rem 1.5rem; }
+  section.on-alt{ background:var(--alt); }
+  section.on-white{ background:var(--white); }
+  .s-head{ text-align:center; max-width:38rem; margin:0 auto 2.75rem; }
+  .s-head h2{ font-size:clamp(1.9rem,3.4vw,2.6rem); }
+  .s-head p{ margin-top:.75rem; color:var(--ink-soft); font-size:1.0625rem; }
+
+  /* ---------------- category tiles ---------------- */
+  .cat-grid{
+    max-width:64rem; margin:0 auto;
+    display:grid; grid-template-columns:repeat(auto-fit,minmax(13.5rem,1fr)); gap:.75rem;
+  }
+  .cat-tile{
+    background:var(--white); border-radius:18px; padding:2.1rem 1.4rem;
+    text-align:center; transition:transform .25s ease, box-shadow .25s ease;
+  }
+  .cat-tile:hover{ transform:translateY(-4px); box-shadow:0 20px 40px -24px rgba(0,0,0,.25); }
+  .cat-tile .glyph{ font-size:2.25rem; }
+  .cat-tile .name{ margin-top:.85rem; font-weight:600; font-size:1.0625rem; }
+  .cat-tile .count{ margin-top:.2rem; color:var(--ink-faint); font-size:.8125rem; }
+
+  /* ---------------- most-popular spotlight ---------------- */
+  .badge-popular{
+    display:inline-block; background:var(--accent); color:#fff; font-size:.6875rem; font-weight:600;
+    padding:.3rem .65rem; border-radius:980px; letter-spacing:.005em;
+  }
+  .spotlight{
+    max-width:44rem; margin:0 auto 3.25rem; background:var(--alt); border-radius:24px;
+    padding:2.6rem 2.5rem; display:flex; align-items:center; gap:2.25rem; text-align:left;
+  }
+  .spotlight .prod-glyph{ font-size:4.25rem; flex-shrink:0; line-height:1; }
+  .spotlight-body{ flex:1; }
+  .spotlight .badge-popular{ margin-bottom:.65rem; }
+  .spotlight .prod-name{ font-size:1.5rem; margin-top:0; }
+  .spotlight .price{ font-size:1.5rem; display:inline-block; margin-top:.35rem; }
+  .spotlight .avail{ margin-left:.6rem; }
+  .spotlight .feat-list{ margin-top:.7rem; display:flex; flex-wrap:wrap; gap:.35rem 1.1rem; list-style:none; padding:0; }
+  .spotlight .feat-list li{ font-size:.875rem; color:var(--ink-soft); }
+  .spotlight .feat-list li::before{ content:"\2713  "; color:var(--accent); font-weight:700; }
+  .spotlight .actions{ margin-top:1.15rem; display:flex; align-items:center; gap:1.3rem; }
+  @media (max-width:36rem){
+    .spotlight{ flex-direction:column; text-align:center; padding:2.25rem 1.5rem; }
+    .spotlight .feat-list{ justify-content:center; }
+    .spotlight .actions{ justify-content:center; }
+  }
+
+  /* ---------------- compare table (Apple "compare models" pattern) ---------------- */
+  .compare{ max-width:60rem; margin:0 auto; overflow-x:auto; }
+  table.compare-table{ width:100%; min-width:40rem; border-collapse:collapse; }
+  .compare-table th, .compare-table td{
+    padding:1.15rem 1rem; text-align:center; vertical-align:top;
+    border-bottom:1px solid var(--divider);
+  }
+  .compare-table thead th{ text-align:center; padding-bottom:1.4rem; }
+  .compare-table .row-label{
+    text-align:left; width:8.5rem; color:var(--ink-faint); font-size:.8125rem; font-weight:500;
+    white-space:nowrap;
+  }
+  .prod-glyph{ font-size:2.75rem; line-height:1; }
+  .prod-name{ margin-top:.6rem; font-weight:600; font-size:1rem; }
+  .price{ font-weight:600; font-size:1.1875rem; }
+  .feat-list{ list-style:none; margin:0; padding:0; color:var(--ink-soft); font-size:.875rem; }
+  .feat-list li{ padding:.15rem 0; }
+  .status{ font-size:.8125rem; font-weight:500; }
+  .status.fresh{ color:var(--ink-soft); }
+  .status.stale{ color:var(--danger); }
+  .avail{ font-size:.875rem; color:var(--ink-soft); }
+  .buy-pill{
+    display:inline-block; background:var(--black); color:var(--white);
+    font-size:.875rem; padding:.6rem 1.2rem; border-radius:980px; margin-top:.4rem;
+    transition:background .15s ease, transform .15s ease; cursor:default;
+  }
+  .buy-pill:hover{ background:#2a2a2c; transform:translateY(-1px); }
+  .buy-none{ color:var(--ink-faint); font-size:.8125rem; }
+  .disclaimer{
+    max-width:38rem; margin:2rem auto 0; text-align:center;
+    font-size:.75rem; color:var(--ink-faint); line-height:1.5;
+  }
+
+  /* ---------------- mobile demo (iPhone-style frame) ---------------- */
+  .phone-row{ display:flex; justify-content:center; }
+  .iphone{
+    width:19rem; border-radius:2.6rem; background:var(--black); padding:.55rem;
+    box-shadow:0 30px 60px -30px rgba(0,0,0,.4);
+  }
+  .iphone .island{
+    width:5.5rem; height:1.35rem; background:var(--black); border-radius:1rem;
+    margin:.35rem auto .1rem; position:relative; z-index:2;
+  }
+  .iphone .screen{
+    background:var(--white); border-radius:2.1rem; margin-top:-1.45rem;
+    padding:1.9rem .9rem 1.1rem; display:grid; gap:.7rem;
+  }
+  .m-card{ border-bottom:1px solid var(--divider); padding-bottom:.7rem; }
+  .m-card:last-child{ border-bottom:none; }
+  .m-row{ display:flex; gap:.7rem; align-items:flex-start; }
+  .m-row .prod-glyph{ font-size:1.9rem; }
+  .m-name{ font-weight:600; font-size:.875rem; }
+  .m-price{ font-weight:600; font-size:.9375rem; margin-top:.1rem; }
+  .m-card .feat-list{ font-size:.75rem; margin-top:.4rem; }
+  .m-card .buy-pill{ display:block; text-align:center; width:100%; margin-top:.55rem; font-size:.8125rem; padding:.5rem; }
+
+  /* ---------------- admin peek: giant-number spec tiles ---------------- */
+  .spec-grid{
+    display:grid; grid-template-columns:repeat(auto-fit,minmax(13rem,1fr));
+    gap:2.5rem; max-width:52rem; margin:0 auto; text-align:center;
+  }
+  .spec-tile .figure{ font-size:clamp(2.75rem,5vw,3.75rem); font-weight:600; letter-spacing:-0.02em; }
+  .spec-tile .figure.warn{ color:var(--danger); }
+  .spec-tile .caption{ margin-top:.35rem; color:var(--on-dark-soft); font-size:.9375rem; }
+  .log-list{ max-width:26rem; margin:2.75rem auto 0; }
+  .log-row{
+    display:flex; justify-content:space-between; padding:.7rem 0;
+    border-top:1px solid var(--divider-dark); font-size:.875rem; color:var(--on-dark-soft);
+  }
+  .log-row .t{ color:var(--white); }
+
+  /* ---------------- footer ---------------- */
+  footer{ background:var(--alt); padding:2.5rem 1.5rem; }
+  footer .wrap{ max-width:64rem; margin:0 auto; }
+  footer .lead{ font-size:.8125rem; color:var(--ink); font-weight:600; }
+  footer .fine{ margin-top:.5rem; font-size:.75rem; color:var(--ink-faint); max-width:40rem; line-height:1.6; }
+  footer hr{ border:none; border-top:1px solid var(--divider); margin:1.4rem 0; }
+  footer .copyright{ font-size:.75rem; color:var(--ink-faint); }
+</style>
+
+<div class="promo"><b>Preview</b> — sample data shown here, this is not the live site.</div>
+
+<nav class="nav">
+  <div class="wrap">
+    <div class="brand">🍳 Kitchen Gear Compare</div>
+    <ul>
+      <li>Cookware</li><li>Knives</li><li>Small Appliances</li><li>Bakeware</li>
+    </ul>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="eyebrow">Kitchen Gear Compare</div>
+  <h1>Compare. Choose better.</h1>
+  <p class="sub">We put top-selling Amazon kitchen products side by side — price, stock, and the features that matter — so the right one is obvious.</p>
+  <div class="cta-row">
+    <a class="pill" href="#compare">See a comparison</a>
+    <a class="link-more" href="#categories">Browse categories</a>
+  </div>
+</header>
+
+<section id="categories" class="on-alt">
+  <div class="s-head reveal">
+    <h2>Shop by category</h2>
+    <p>Every comparison starts here.</p>
+  </div>
+  <div class="cat-grid reveal">
+    <div class="cat-tile"><div class="glyph">🍳</div><div class="name">Cookware</div><div class="count">4 comparisons</div></div>
+    <div class="cat-tile"><div class="glyph">🔪</div><div class="name">Knives &amp; Cutting</div><div class="count">2 comparisons</div></div>
+    <div class="cat-tile"><div class="glyph">🔌</div><div class="name">Small Appliances</div><div class="count">5 comparisons</div></div>
+    <div class="cat-tile"><div class="glyph">🥧</div><div class="name">Bakeware</div><div class="count">1 comparison</div></div>
+  </div>
+</section>
+
+<section id="compare" class="on-white">
+  <div class="s-head reveal">
+    <h2>Best Non-Stick Frying Pans</h2>
+    <p>Three ways to fry an egg. Here's how they actually compare.</p>
+  </div>
+
+  <div class="spotlight reveal">
+    <div class="prod-glyph">🍳</div>
+    <div class="spotlight-body">
+      <span class="badge-popular">🏆 Most Popular</span>
+      <div class="prod-name">Tramonto 10" Ceramic Fry Pan</div>
+      <span class="price num">$34.99</span><span class="avail">In Stock</span>
+      <ul class="feat-list">
+        <li>PFOA-free ceramic coating</li>
+        <li>Oven safe to 500°F</li>
+        <li>Induction compatible</li>
+      </ul>
+      <div class="actions">
+        <a class="buy-pill" href="#" onclick="return false">View on Amazon</a>
+        <span class="status fresh num">Updated 2 hours ago</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="compare reveal">
+    <table class="compare-table">
+      <thead>
+        <tr>
+          <th class="row-label"></th>
+          <th>
+            <span class="badge-popular">Most Popular</span><br>
+            <div class="prod-glyph">🍳</div>
+            <div class="prod-name">Tramonto 10"<br>Ceramic Fry Pan</div>
+          </th>
+          <th>
+            <div class="prod-glyph">🍳</div>
+            <div class="prod-name">Halden Pro<br>Carbon Steel Skillet</div>
+          </th>
+          <th>
+            <div class="prod-glyph">🍳</div>
+            <div class="prod-name">Norrbo<br>Non-Stick Duo Set</div>
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="row-label">Price</td>
+          <td><span class="price num">$34.99</span></td>
+          <td><span class="price num">$48.50</span></td>
+          <td><span class="price num">$52.00</span></td>
+        </tr>
+        <tr>
+          <td class="row-label">Features</td>
+          <td>
+            <ul class="feat-list"><li>PFOA-free ceramic</li><li>Oven safe 500°F</li><li>Induction ready</li></ul>
+          </td>
+          <td>
+            <ul class="feat-list"><li>Naturally non-stick</li><li>Works on induction</li><li>Riveted handle</li></ul>
+          </td>
+          <td>
+            <ul class="feat-list"><li>8" &amp; 10" duo set</li><li>Cool-touch handles</li><li>Dishwasher safe</li></ul>
+          </td>
+        </tr>
+        <tr>
+          <td class="row-label">Availability</td>
+          <td><span class="avail">In Stock</span></td>
+          <td><span class="avail">Only 3 left</span></td>
+          <td><span class="avail">In Stock</span></td>
+        </tr>
+        <tr>
+          <td class="row-label">Updated</td>
+          <td><span class="status fresh num">2 hours ago</span></td>
+          <td><span class="status stale num">29 hours ago</span></td>
+          <td><span class="status fresh num">2 hours ago</span></td>
+        </tr>
+        <tr>
+          <td class="row-label">Buy</td>
+          <td><a class="buy-pill" href="#" onclick="return false">View on Amazon</a></td>
+          <td><a class="buy-pill" href="#" onclick="return false">View on Amazon</a></td>
+          <td><span class="buy-none">Buy link unavailable</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p class="disclaimer reveal">Product prices and availability are accurate as of the date/time indicated and are subject to change. Any price and availability information displayed on Amazon at the time of purchase will apply to the purchase.</p>
+</section>
+
+<section class="on-alt">
+  <div class="s-head reveal">
+    <h2>Same page. Any screen.</h2>
+    <p>Below the table breakpoint, columns become a scroll of cards.</p>
+  </div>
+  <div class="phone-row reveal">
+    <div class="iphone">
+      <div class="island"></div>
+      <div class="screen">
+        <div class="m-card">
+          <span class="badge-popular" style="margin-bottom:.5rem;">Most Popular</span>
+          <div class="m-row">
+            <div class="prod-glyph">🍳</div>
+            <div>
+              <div class="m-name">Tramonto 10" Ceramic Fry Pan</div>
+              <div class="m-price num">$34.99</div>
+              <div class="status fresh num">2 hours ago</div>
+            </div>
+          </div>
+          <ul class="feat-list"><li>PFOA-free ceramic coating</li><li>Oven safe to 500°F</li></ul>
+          <a class="buy-pill" href="#" onclick="return false">View on Amazon</a>
+        </div>
+        <div class="m-card">
+          <div class="m-row">
+            <div class="prod-glyph">🍳</div>
+            <div>
+              <div class="m-name">Halden Pro Carbon Steel Skillet</div>
+              <div class="m-price num">$48.50</div>
+              <div class="status stale num">29 hours ago</div>
+            </div>
+          </div>
+          <ul class="feat-list"><li>Naturally non-stick</li><li>Riveted stainless handle</li></ul>
+          <a class="buy-pill" href="#" onclick="return false">View on Amazon</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="on-white" style="background:var(--black); color:var(--white);">
+  <div class="s-head reveal">
+    <h2 style="color:var(--white);">Built for one operator.</h2>
+    <p style="color:var(--on-dark-soft);">What you see at <span class="num">/admin</span> — protected by a single secret token. Shown in English here; the real dashboard is in Korean.</p>
+  </div>
+  <div class="spec-grid reveal">
+    <div class="spec-tile">
+      <div class="figure num">18</div>
+      <div class="caption">Active listings</div>
+    </div>
+    <div class="spec-tile">
+      <div class="figure warn num">1</div>
+      <div class="caption">Stale (24h+)</div>
+    </div>
+    <div class="spec-tile">
+      <div class="figure warn num">1</div>
+      <div class="caption">Buy link missing</div>
+    </div>
+  </div>
+  <div class="log-list reveal">
+    <div class="log-row"><span class="t num">09-09 14:00</span><span class="num">18 / 17 / 1</span></div>
+    <div class="log-row"><span class="t num">09-09 08:00</span><span class="num">18 / 18 / 0</span></div>
+    <div class="log-row"><span class="t num">09-09 02:00</span><span class="num">17 / 17 / 0</span></div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p class="lead">As an Amazon Associate I earn from qualifying purchases.</p>
+    <p class="fine">This site is a participant in the Amazon Associates Program and may earn commissions on qualifying purchases made through links on this site.</p>
+    <hr>
+    <p class="copyright">Preview build · sample data only · not affiliated with or endorsed by Apple Inc.</p>
+  </div>
+</footer>
+
+<script>
+  (function(){
+    var els = document.querySelectorAll('.reveal');
+    if (!('IntersectionObserver' in window)) { els.forEach(function(e){ e.classList.add('in'); }); return; }
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        if (entry.isIntersecting) { entry.target.classList.add('in'); io.unobserve(entry.target); }
+      });
+    }, { threshold: 0.15 });
+    els.forEach(function(e){ io.observe(e); });
+  })();
+</script>
